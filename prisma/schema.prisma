@@ -1,0 +1,41 @@
+// Schema do Prisma — modelo de dados da EasyFood.
+// Documentação: https://pris.ly/d/prisma-schema
+//
+// Regra do projeto: toda alteração aqui precisa de uma migration SQL
+// correspondente em prisma/migrations/. O teste tests/schema.test.js compara
+// os dois automaticamente (colunas, tipos, nulidade, índices e chaves
+// estrangeiras) para que schema e migrations não saiam de sincronia.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurant {
+  id       Int      @id @default(autoincrement())
+  name     String   @db.VarChar(150)
+  category String?  @db.VarChar(100)
+  rating   Decimal? @db.Decimal(2, 1)
+
+  // Dono do restaurante: quem cadastrou pelo POST /restaurants.
+  // Opcional porque os registros anteriores ao vínculo (e os do seed) não têm
+  // dono. Se o usuário for excluído, o restaurante continua existindo
+  // e volta a ficar sem dono (SetNull).
+  userId Int?
+  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([userId])
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  name     String @db.VarChar(150)
+  email    String @unique @db.VarChar(150)
+  password String @db.VarChar(255)
+
+  restaurants Restaurant[]
+}

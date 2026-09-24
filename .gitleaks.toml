@@ -1,0 +1,35 @@
+# Configuração do gitleaks para este projeto — usada pelo job "seguranca" em
+# .github/workflows/ci.yml.
+#
+# Estende o conjunto de regras padrão do gitleaks (detecta chaves de AWS,
+# tokens de GitHub/Slack/Stripe, chaves privadas, strings de alta entropia
+# etc.) e permite (allowlist) só os "segredos" que já sabemos ser falsos
+# positivos: valores fixos, documentados, usados apenas em teste/dev local,
+# nunca em produção. Qualquer coisa fora dessa lista continua bloqueando o
+# job.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Falsos positivos conhecidos: fixtures de teste/dev, não segredos reais"
+
+regexes = [
+  # JWT_SECRET fixo (64 caracteres hex) usado só pela suíte de testes —
+  # tests/helpers/server.js e tests/env.test.js. Nunca é lido fora de
+  # `NODE_ENV=test`; um valor real é sempre exigido em desenvolvimento e
+  # produção (ver src/config/env.js).
+  '''0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef''',
+
+  # Credenciais padrão do Postgres do container de desenvolvimento LOCAL
+  # (docker-compose.yml, .env.example) — nunca exposto à internet.
+  '''postgres:postgres@localhost'''
+]
+
+paths = [
+  # Senha de demonstração opt-in (só com SEED_DEMO_USER=true), bloqueada
+  # quando NODE_ENV=production e documentada no próprio arquivo e no
+  # README ("Conta de demonstração") — não é um segredo, é pública de
+  # propósito.
+  '''prisma/seed\.js'''
+]

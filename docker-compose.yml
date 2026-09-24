@@ -1,0 +1,36 @@
+# EasyFood — ambiente de desenvolvimento
+#
+# Sobe apenas o PostgreSQL. A API roda localmente (npm start / npm run dev).
+# As credenciais abaixo são só para desenvolvimento local — nunca use em produção.
+#
+# Uso:
+#   docker compose up -d      # sobe o banco em segundo plano
+#   docker compose down       # para o banco (os dados são mantidos)
+#   docker compose down -v    # para o banco e APAGA os dados
+
+name: easyfood
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: easyfood-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: easyfood
+    ports:
+      # Já tem um PostgreSQL local na porta 5432? Suba com outra porta, por exemplo:
+      #   POSTGRES_PORT=5433 docker compose up -d
+      # e ajuste a porta na DATABASE_URL do seu .env.
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d easyfood"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

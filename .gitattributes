@@ -1,0 +1,16 @@
+# Normaliza as quebras de linha no repositório.
+#
+# Sem isto, um arquivo criado no Windows (CRLF) e outro no Linux/macOS (LF)
+# aparecem como "arquivo inteiro alterado" no diff, mesmo sem mudança real.
+#
+# text=auto  -> o Git decide o que é texto e normaliza para LF no repositório
+# eol=lf     -> na cópia de trabalho, também usa LF em qualquer sistema
+* text=auto eol=lf
+
+# Arquivos binários: nunca converter.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary

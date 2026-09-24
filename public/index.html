@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EasyFood</title>
+  <!-- CSS e JS ficam em arquivos próprios: a Content-Security-Policy da API
+       só aceita script e estilo da própria origem, sem código nem atributo
+       style inline. -->
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <div class="phone">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>📶 🔋</span>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-logo">
+        <span class="logo-badge">🍴</span>
+        <span class="logo-word">EasyFood</span>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Buscar restaurantes pelo nome">
+    </div>
+
+    <!-- Categories -->
+    <div class="categories" id="categories">
+      <div class="category-chip active" data-category="Todos">🍽️ Todos</div>
+      <div class="category-chip" data-category="Burger">🍔 Burger</div>
+      <div class="category-chip" data-category="Pizza">🍕 Pizza</div>
+      <div class="category-chip" data-category="Sushi">🍣 Sushi</div>
+      <div class="category-chip" data-category="Saudável">🥗 Saudável</div>
+    </div>
+
+    <!-- Section header -->
+    <div class="section-header">
+      <h2 id="results-heading">Restaurantes</h2>
+      <select id="sort-select" class="sort-select" aria-label="Ordenar restaurantes">
+        <option value="padrao">Ordenar</option>
+        <option value="nome-asc">Nome (A–Z)</option>
+        <option value="nome-desc">Nome (Z–A)</option>
+        <option value="rating-desc">Melhor avaliação</option>
+        <option value="rating-asc">Pior avaliação</option>
+      </select>
+    </div>
+
+    <!-- Restaurant list (scrollable) -->
+    <div class="restaurant-list" id="restaurant-list">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Carregando restaurantes...</p>
+      </div>
+    </div>
+
+    <!-- Add Restaurant Form (hidden by default) -->
+    <div class="add-restaurant-section" id="add-restaurant-section">
+      <h2>Cadastrar restaurante</h2>
+      <form id="add-restaurant-form">
+        <div class="form-group">
+          <label for="restaurant-name">Nome do restaurante</label>
+          <input type="text" id="restaurant-name" placeholder="Ex: Taco Loco" required>
+        </div>
+        <div class="form-group">
+          <label for="restaurant-category">Categoria</label>
+          <select id="restaurant-category" required>
+            <option value="">Selecione uma categoria</option>
+            <option value="Burger">🍔 Burger</option>
+            <option value="Pizza">🍕 Pizza</option>
+            <option value="Sushi">🍣 Sushi</option>
+            <option value="Saudável">🥗 Saudável</option>
+            <option value="Mexicana">🌮 Mexicana</option>
+            <option value="Brasileira">🍛 Brasileira</option>
+            <option value="Japonesa">🍱 Japonesa</option>
+            <option value="Italiana">🍝 Italiana</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="restaurant-rating">Avaliação (0 a 5)</label>
+          <input type="number" id="restaurant-rating" placeholder="Ex: 4.3" min="0" max="5" step="0.1" required>
+        </div>
+        <button type="submit" class="submit-btn" id="submit-btn">Cadastrar restaurante</button>
+      </form>
+      <div class="form-message" id="form-message"></div>
+    </div>
+
+    <!-- Profile / Auth (hidden by default) -->
+    <div class="profile-section" id="profile-section">
+
+      <!-- Logged out: login / register tabs -->
+      <div id="auth-logged-out">
+        <div class="auth-tabs">
+          <div class="auth-tab active" data-tab="login">Entrar</div>
+          <div class="auth-tab" data-tab="register">Criar conta</div>
+        </div>
+
+        <form id="login-form" class="auth-form active">
+          <div class="form-group">
+            <label for="login-email">E-mail</label>
+            <input type="email" id="login-email" placeholder="voce@email.com" required>
+          </div>
+          <div class="form-group">
+            <label for="login-password">Senha</label>
+            <input type="password" id="login-password" placeholder="Sua senha" required>
+          </div>
+          <button type="submit" class="submit-btn" id="login-btn">Entrar</button>
+        </form>
+
+        <form id="register-form" class="auth-form">
+          <div class="form-group">
+            <label for="register-name">Nome</label>
+            <input type="text" id="register-name" placeholder="Seu nome" required>
+          </div>
+          <div class="form-group">
+            <label for="register-email">E-mail</label>
+            <input type="email" id="register-email" placeholder="voce@email.com" required>
+          </div>
+          <div class="form-group">
+            <label for="register-password">Senha</label>
+            <input type="password" id="register-password" placeholder="Mínimo 6 caracteres" required minlength="6">
+          </div>
+          <button type="submit" class="submit-btn" id="register-btn">Criar conta</button>
+        </form>
+
+        <p class="auth-hint">Faça login para poder cadastrar restaurantes.</p>
+        <div class="form-message" id="auth-message"></div>
+      </div>
+
+      <!-- Logged in: profile card -->
+      <div class="profile-card" id="profile-card">
+        <div class="profile-avatar" id="profile-avatar">?</div>
+        <h3 id="profile-name">—</h3>
+        <p id="profile-email">—</p>
+        <button class="logout-btn" id="logout-btn">Sair da conta</button>
+      </div>
+    </div>
+
+    <!-- Bottom nav -->
+    <div class="bottom-nav">
+      <div class="nav-item active" data-view="home">
+        <span class="icon">🏠</span>
+        <span>Início</span>
+      </div>
+      <div class="nav-item" data-view="add">
+        <span class="icon">➕</span>
+        <span>Cadastrar</span>
+      </div>
+      <div class="nav-item" data-view="profile">
+        <span class="icon">👤</span>
+        <span>Perfil</span>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

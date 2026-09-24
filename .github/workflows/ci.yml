@@ -1,0 +1,184 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build, testes e verificações (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+
+    env:
+      # Nenhuma verificação deste job acessa o banco: a suíte de testes troca
+      # o módulo do Prisma por um dublê em memória. A URL existe só porque o
+      # `prisma validate` exige a variável. O job "banco", abaixo, é quem
+      # verifica o schema contra um PostgreSQL de verdade.
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/easyfood
+      PORT: 3000
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      # O segredo é gerado na hora, a cada execução: 64 caracteres
+      # hexadecimais (32 bytes), que é o mínimo exigido por src/config/env.js.
+      # Assim o repositório não guarda nada com cara de segredo real, e um
+      # valor copiado daqui não serve para nada.
+      - name: Gerar JWT_SECRET efêmero para esta execução
+        run: echo "JWT_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Validar o schema do Prisma
+        run: npx prisma validate
+
+      - name: Gerar o Prisma Client
+        run: npx prisma generate
+
+      - name: Checar a sintaxe dos arquivos JavaScript
+        run: find . -name "*.js" -not -path "./node_modules/*" -print0 | xargs -0 -n1 node --check
+
+      - name: Validar o docker-compose.yml
+        run: docker compose -f docker-compose.yml config >/dev/null
+
+      - name: Rodar a suíte de testes (node --test)
+        run: npm test
+
+      # Informativo, não bloqueia o build. As 3 vulnerabilidades altas que
+      # aparecem vêm da CLI do Prisma e não têm correção não-breaking hoje —
+      # o detalhe está em "Limitações conhecidas" no README.
+      - name: npm audit (informativo)
+        continue-on-error: true
+        run: npm audit
+
+  banco:
+    name: Migrations e smoke test (PostgreSQL real)
+    runs-on: ubuntu-latest
+    needs: build
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: easyfood
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d easyfood"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/easyfood
+      # Banco vazio e descartável, só para o prisma:check (ver
+      # scripts/prisma-check.js): o Prisma aplica e desfaz migrations nele.
+      SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/easyfood_shadow
+      PORT: 3000
+      NODE_ENV: development
+      SEED_DEMO_USER: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Gerar JWT_SECRET efêmero para esta execução
+        run: echo "JWT_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Criar o banco sombra do prisma:check
+        run: PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE easyfood_shadow"
+
+      - name: Aplicar as migrations (prisma migrate deploy)
+        run: npx prisma migrate deploy
+
+      # Compara o schema.prisma com o banco real. Existe porque a migration
+      # que vincula restaurante -> usuário foi escrita à mão, sem passar por
+      # `prisma migrate dev` (ver docs/manutencao.md, seção 7).
+      - name: Verificar o schema contra o banco (prisma:check)
+        run: npm run prisma:check
+
+      - name: Rodar o seed duas vezes (confere que é idempotente)
+        run: |
+          npm run prisma:seed
+          npm run prisma:seed
+
+      - name: Subir a API
+        run: |
+          nohup node server.js > server.log 2>&1 &
+          echo $! > server.pid
+
+          for _ in $(seq 1 20); do
+            curl -sf -o /dev/null http://localhost:3000/health && exit 0
+            sleep 1
+          done
+
+          echo "A API não respondeu em /health a tempo:"
+          cat server.log
+          exit 1
+
+      - name: Instalar o jq (usado pelo smoke test)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
+
+      - name: Smoke test de ponta a ponta
+        run: BASE_URL=http://localhost:3000 bash scripts/smoke-test.sh
+
+      - name: Parar a API
+        if: always()
+        run: kill "$(cat server.pid)" 2>/dev/null || true
+
+      - name: Exibir o log da API em caso de falha
+        if: failure()
+        run: cat server.log || true
+
+  seguranca:
+    name: Escaneamento de segredos (gitleaks)
+    runs-on: ubuntu-latest
+    # Não depende de "build": um segredo commitado é grave o bastante para
+    # não esperar o resto do pipeline terminar antes de avisar.
+
+    steps:
+      - name: Checkout (histórico completo)
+        uses: actions/checkout@v4
+        with:
+          # fetch-depth 0 traz todo o histórico de commits, não só o último —
+          # sem isso, um segredo commitado e depois removido num commit
+          # seguinte passaria batido.
+          fetch-depth: 0
+
+      # gitleaks-action é gratuita para repositórios públicos, sem precisar
+      # de GITLEAKS_LICENSE. Só é necessária a licença (secrets.GITLEAKS_LICENSE)
+      # se este repositório se tornar privado — ver
+      # https://github.com/gitleaks/gitleaks-action
+      - name: Rodar gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

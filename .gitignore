@@ -1,0 +1,37 @@
+# Dependências
+node_modules
+
+# Variáveis de ambiente (nunca versionar)
+.env
+.env.local
+.env.*.local
+
+# Cliente Prisma gerado
+/generated/prisma
+
+# Bancos locais em arquivo (SQLite etc.) — o projeto usa PostgreSQL (ADR-002),
+# mas qualquer .db que apareça na pasta é resultado de teste local.
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Configuração de ferramentas de IA / assistentes de código.
+# Ficam fora do repositório: são preferências de ambiente de cada pessoa e
+# podem conter caminhos locais ou chaves.
+.agents/
+.claude/
+.windsurf/
+.cursor/
+skills-lock.json
+
+# Sistema operacional / editor
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+.vscode/
+.idea/
+
+# Saída de cobertura / testes
+coverage/
