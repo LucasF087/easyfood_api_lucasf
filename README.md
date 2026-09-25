@@ -2,7 +2,7 @@
 
 ![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-green)
 ![Node](https://img.shields.io/badge/node-20%2B-brightgreen)
-![Testes](https://img.shields.io/badge/testes-93%20com%20node%20--test-blue)
+![Testes](https://img.shields.io/badge/testes-104%20com%20node%20--test-blue)
 [![CI](https://github.com/LucasF087/easyfood_api_lucasf/actions/workflows/ci.yml/badge.svg)](https://github.com/LucasF087/easyfood_api_lucasf/actions/workflows/ci.yml)
 
 API do projeto **EasyFood** — cadastro e consulta de restaurantes, com
@@ -123,7 +123,7 @@ easyfood/
 │       ├── health/health.routes.js
 │       ├── notifications/         # cenário da ADR-005, simulado com log
 │       └── restaurants/           # service, controller, routes (posse: só o dono altera/exclui)
-├── tests/                          # suíte com node --test (sem banco), 93 casos
+├── tests/                          # suíte com node --test (sem banco), 104 casos
 │   ├── helpers/                   # dublê do Prisma + servidor de teste (server.js)
 │   ├── api.test.js  auth.test.js  cookies.test.js  cors.test.js  frontend.test.js
 │   ├── env.test.js  notifications.test.js  rate-limit.test.js  restaurants.test.js
@@ -208,7 +208,7 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 npm test
 ```
 
-93 casos com `node --test` (embutido no Node, sem dependência nova), sem
+104 casos com `node --test` (embutido no Node, sem dependência nova), sem
 tocar em banco de dados — ver [`docs/manutencao.md`](./docs/manutencao.md#6-testes).
 
 ### Smoke test de ponta a ponta (com banco real)
@@ -434,7 +434,7 @@ O workflow [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) roda a
 cada push na `main` e em pull requests, em três jobs:
 
 1. **`build`** (Node 20 e 22): instala as dependências, valida o schema do
-   Prisma, checa a sintaxe, valida o `docker-compose.yml`, roda os 93 testes
+   Prisma, checa a sintaxe, valida o `docker-compose.yml`, roda os 104 testes
    (sem banco) e reporta o `npm audit` (informativo).
 2. **`banco`** (depois do `build`, com um serviço PostgreSQL): aplica as
    migrations (`prisma migrate deploy`), confere schema × banco
