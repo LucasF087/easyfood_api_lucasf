@@ -98,7 +98,11 @@ const options = {
   definition,
   // Só arquivos de rota têm anotação @openapi — services e controllers não
   // precisam ser varridos.
-  apis: [path.join(__dirname, "../modules/auth/auth.routes.js")]
+  apis: [
+  path.join(__dirname, "../modules/auth/auth.routes.js"),
+  path.join(__dirname, "../modules/health/health.routes.js"),
+  path.join(__dirname, "../modules/restaurants/restaurant.routes.js")
+]
 };
 
 module.exports = swaggerJsdoc(options);
