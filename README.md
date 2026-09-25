@@ -2,8 +2,8 @@
 
 ![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-green)
 ![Node](https://img.shields.io/badge/node-20%2B-brightgreen)
-![Testes](https://img.shields.io/badge/testes-104%20com%20node%20--test-blue)
-[![CI](https://github.com/LucasF087/easyfood-api/actions/workflows/ci.yml/badge.svg)](https://github.com/LucasF087/easyfood-api/actions/workflows/ci.yml)
+![Testes](https://img.shields.io/badge/testes-93%20com%20node%20--test-blue)
+[![CI](https://github.com/LucasF087/easyfood_api_lucasf/actions/workflows/ci.yml/badge.svg)](https://github.com/LucasF087/easyfood_api_lucasf/actions/workflows/ci.yml)
 
 API do projeto **EasyFood** — cadastro e consulta de restaurantes, com
 autenticação de usuários via JWT e persistência em PostgreSQL usando Prisma.
@@ -123,7 +123,7 @@ easyfood/
 │       ├── health/health.routes.js
 │       ├── notifications/         # cenário da ADR-005, simulado com log
 │       └── restaurants/           # service, controller, routes (posse: só o dono altera/exclui)
-├── tests/                          # suíte com node --test (sem banco), 104 casos
+├── tests/                          # suíte com node --test (sem banco), 93 casos
 │   ├── helpers/                   # dublê do Prisma + servidor de teste (server.js)
 │   ├── api.test.js  auth.test.js  cookies.test.js  cors.test.js  frontend.test.js
 │   ├── env.test.js  notifications.test.js  rate-limit.test.js  restaurants.test.js
@@ -157,8 +157,8 @@ Cada camada tem uma responsabilidade única — a justificativa está na
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/LucasF087/easyfood-api.git
-cd easyfood-api
+git clone https://github.com/LucasF087/easyfood_api_lucasf.git
+cd easyfood_api_lucasf
 
 # 2. Instale as dependências
 npm install
@@ -434,7 +434,7 @@ O workflow [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) roda a
 cada push na `main` e em pull requests, em três jobs:
 
 1. **`build`** (Node 20 e 22): instala as dependências, valida o schema do
-   Prisma, checa a sintaxe, valida o `docker-compose.yml`, roda os 104 testes
+   Prisma, checa a sintaxe, valida o `docker-compose.yml`, roda os 93 testes
    (sem banco) e reporta o `npm audit` (informativo).
 2. **`banco`** (depois do `build`, com um serviço PostgreSQL): aplica as
    migrations (`prisma migrate deploy`), confere schema × banco
@@ -451,11 +451,11 @@ cada push na `main` e em pull requests, em três jobs:
 
 ## 🗂️ Sobre o histórico do Git
 
-O histórico começa na tag `v1.0.0`, com o código entregue na Aula 6 (a "V1").
-As tags seguintes marcam os pontos de manutenção documentados em
-[`docs/manutencao.md`](./docs/manutencao.md). Os commits usam prefixos
-(`feat`, `fix`, `docs`, `test`, `chore`) no estilo do
-[Conventional Commits](https://www.conventionalcommits.org/pt-br/).
+Este repositório contém a versão atual do projeto e o histórico Git correspondente
+às alterações realizadas neste repositório. As decisões e pontos de manutenção
+documentados no projeto estão registrados em [`docs/manutencao.md`](./docs/manutencao.md).
+Quando utilizados, os commits seguem prefixos (`feat`, `fix`, `docs`, `test`,
+`chore`) no estilo do [Conventional Commits](https://www.conventionalcommits.org/pt-br/).
 
 ---
 
